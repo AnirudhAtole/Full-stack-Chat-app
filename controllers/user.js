@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const Bcrypt  = require('bcrypt');
 const sequelize = require('../utils/database');
+const jwt = require('jsonwebtoken');
 
 exports.addUser = async(req,res) =>{
     // const t = await sequelize.transaction();
@@ -50,6 +51,10 @@ exports.addUser = async(req,res) =>{
     
 }
 
+function generateToken(id){
+    return jwt.sign({id:id} , process.env.TOKEN_SECRET);
+}
+
 exports.validateUser = async(req,res) =>{
     const email = req.body.email;
 
@@ -62,7 +67,7 @@ exports.validateUser = async(req,res) =>{
         if(user){
             Bcrypt.compare(req.body.password , user.password , (err,result)=>{
                 if(result){
-                    res.status(200).json({success : true , message : "User signed in... Welcome young jedi"});
+                    res.status(200).json({success : true , message : "User signed in... Welcome young jedi" , token : generateToken(user.id)});
                 }
                 else{
                     res.status(200).json({success:false , message : "Your password is incorrect may be you should take a look first"});
