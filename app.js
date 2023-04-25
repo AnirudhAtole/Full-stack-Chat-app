@@ -11,7 +11,11 @@ const userRoutes = require('./routes/user');
 
 const sequelize = require('./utils/database');
 
-app.use(cors());
+app.use(cors(
+    {
+        origin: "http://127.0.0.1:3000"
+    }
+));
 app.use(bodyParser.json())
 
 app.use(userRoutes);
