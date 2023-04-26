@@ -1,6 +1,6 @@
 let textbox = document.getElementById("texts");
 const token = localStorage.getItem('token');
-
+let updated ;
 textbox.addEventListener("keydown", async function(e){
 
     if(e.key === "Enter"){
@@ -75,12 +75,23 @@ async function sendChat(chat){
   return(result.data.success)
 }
 
+setInterval(async () => {
+  const response = await axios.get(`http://localhost:3000/chat/updated-chats?updation=${updated}`, {headers:{"Authorization":token}});
+  const {result} = response.data;
+  updated += result.length;
+  result.forEach(element => {
+    if(element.userId !== id){
+       createChat(element.name,element.chatmessages,element.createdAt)
+    }
+  })
+}, 1000);
 
 
 window.addEventListener("DOMContentLoaded",async ()=>{
   const {id} = parseJwt(token);
   const response = await axios.get('http://localhost:3000/chat/get-chats',{headers :{"Authorization":token}});
   const {result} = response.data;
+  updated = result.length;
   result.forEach(element => {
     if(element.userId === id){
       createChat("user",element.chatmessages,element.createdAt)
