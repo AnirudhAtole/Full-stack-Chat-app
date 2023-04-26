@@ -1,11 +1,13 @@
+const { QueryTypes } = require('sequelize');
 const Chat = require('../models/chats');
+const sequelize = require('../utils/database');
 
 
 exports.addChat = async(req,res)=>{
     try{
         const chatmessages = req.body.chat;
 
-        const result = await Chat.create(
+        await Chat.create(
             {
                 chatmessages:chatmessages,
                 userId : req.user.dataValues.id
@@ -16,5 +18,22 @@ exports.addChat = async(req,res)=>{
     catch(err){
         console.log(err);
         res.status(400).json({success:false , message : "Unable to create"});
+    }
+}
+
+exports.getChats = async(req,res) =>{
+    try{
+        const result = await sequelize.query(`SELECT chatmessages , chats.createdAt , name , userId 
+        FROM chatapp.chats
+        LEFT outer join chatapp.users
+        ON chats.userId = users.id
+        order by chats.createdAt ASC; `, {type: QueryTypes.SELECT});
+
+        console.log(result);
+        res.status(200).json({success:true , result : result});
+
+    }
+    catch(err){
+        console.log(err);
     }
 }
