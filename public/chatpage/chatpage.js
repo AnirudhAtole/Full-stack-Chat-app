@@ -1,6 +1,7 @@
 let textbox = document.getElementById("texts");
+const token = localStorage.getItem('token');
 
-textbox.addEventListener("keydown", function(e){
+textbox.addEventListener("keydown", async function(e){
 
     if(e.key === "Enter"){
         let current = new Date();
@@ -8,8 +9,14 @@ textbox.addEventListener("keydown", function(e){
         let cTime = current.getHours() + ":" + current.getMinutes() + ":" + current.getSeconds();
         let dateTime = cDate + ' ' + cTime;
         if(textbox.value !== ''){
-            createChat("user",textbox.value,dateTime)
-        textbox.value = ""
+          const chat = textbox.value;
+          if(sendChat(chat)){
+            createChat("user",chat,dateTime)
+            textbox.value = ""
+          }
+          else{
+            alert("unable to send")
+          }
         }
     }
 })
@@ -48,4 +55,12 @@ function createChat(sender,chat,time){
         </div>`
     }
     chat1.appendChild(div);
+}
+
+
+async function sendChat(chat){
+  
+  const result = await axios.post('http://localhost:3000/chat/send-chat',{chat},{headers :{"Authorization":token}});
+  
+  return(result.data.success)
 }

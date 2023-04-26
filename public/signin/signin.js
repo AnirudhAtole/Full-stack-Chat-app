@@ -8,7 +8,9 @@ myForm.onsubmit = async(e)=>{
     let result = await axios.post('http://localhost:3000/user/checkUser',{email,password});
 
     if(result.data.success){
+        localStorage.setItem('token',result.data.token)
         alert(result.data.message);
+        window.location.href = '../chatpage/chatpage.html';
     }
     else{
         alert(result.data.message);
