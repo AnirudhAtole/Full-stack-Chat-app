@@ -28,8 +28,6 @@ exports.getChats = async(req,res) =>{
         LEFT outer join chatapp.users
         ON chats.userId = users.id
         order by chats.createdAt ASC; `, {type: QueryTypes.SELECT});
-
-        console.log(result);
         res.status(200).json({success:true , result : result});
 
     }
@@ -40,6 +38,7 @@ exports.getChats = async(req,res) =>{
 
 exports.getUpdatedChats = async(req,res) =>{
     try{
+        console.log(+req.query.updation)
         const offset = +req.query.updation;
         const result = await sequelize.query(`SELECT chatmessages , chats.createdAt , name , userId 
         FROM chatapp.chats

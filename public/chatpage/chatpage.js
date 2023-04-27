@@ -1,22 +1,14 @@
 let textbox = document.getElementById("texts");
 const token = localStorage.getItem('token');
-let updated ;
+var updated ;
+
 textbox.addEventListener("keydown", async function(e){
 
     if(e.key === "Enter"){
-        let current = new Date();
-        let cDate = current.getFullYear() + '-' + (current.getMonth() + 1) + '-' + current.getDate();
-        let cTime = current.getHours() + ":" + current.getMinutes() + ":" + current.getSeconds();
-        let dateTime = cDate + ' ' + cTime;
         if(textbox.value !== ''){
           const chat = textbox.value;
-          if(sendChat(chat)){
-            createChat("user",chat,dateTime)
-            textbox.value = ""
-          }
-          else{
-            alert("unable to send")
-          }
+          sendChat(chat);
+          textbox.value = '';
         }
     }
 })
@@ -69,19 +61,27 @@ function createChat(sender,chat,time){
 
 
 async function sendChat(chat){
-  
-  const result = await axios.post('http://localhost:3000/chat/send-chat',{chat},{headers :{"Authorization":token}});
-  
-  return(result.data.success)
+  try{
+    const result = await axios.post('http://localhost:3000/chat/send-chat',{chat},{headers :{"Authorization":token}});
+    return(result.data.success);
+  }
+  catch(err){
+    console.log(err);
+  }
 }
 
 setInterval(async () => {
-  const response = await axios.get(`http://localhost:3000/chat/updated-chats?updation=${updated}`, {headers:{"Authorization":token}});
+  const response = await axios.get(`http://localhost:3000/chats/updated-chats?updation=${updated}`, {headers:{"Authorization":token}});
   const {result} = response.data;
+  const {id} = parseJwt(token);
+  console.log(result);
   updated += result.length;
   result.forEach(element => {
     if(element.userId !== id){
        createChat(element.name,element.chatmessages,element.createdAt)
+    }
+    else{
+      createChat("user",element.chatmessages,element.createdAt)
     }
   })
 }, 1000);
@@ -92,6 +92,7 @@ window.addEventListener("DOMContentLoaded",async ()=>{
   const response = await axios.get('http://localhost:3000/chat/get-chats',{headers :{"Authorization":token}});
   const {result} = response.data;
   updated = result.length;
+  console.log(updated);
   result.forEach(element => {
     if(element.userId === id){
       createChat("user",element.chatmessages,element.createdAt)
