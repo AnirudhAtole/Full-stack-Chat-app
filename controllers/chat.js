@@ -23,7 +23,7 @@ exports.addChat = async(req,res)=>{
 
 exports.getChats = async(req,res) =>{
     try{
-        const result = await sequelize.query(`SELECT chatmessages , chats.createdAt , name , userId 
+        const result = await sequelize.query(`SELECT chatmessages , chats.createdAt , chats.id ,name , userId 
         FROM chatapp.chats
         LEFT outer join chatapp.users
         ON chats.userId = users.id
@@ -39,13 +39,13 @@ exports.getChats = async(req,res) =>{
 exports.getUpdatedChats = async(req,res) =>{
     try{
         console.log(+req.query.updation)
-        const offset = +req.query.updation;
-        const result = await sequelize.query(`SELECT chatmessages , chats.createdAt , name , userId 
+        const id = +req.query.updation;
+        const result = await sequelize.query(`SELECT chatmessages , chats.createdAt , chats.id ,name , userId 
         FROM chatapp.chats
         LEFT outer join chatapp.users
         ON chats.userId = users.id
-        order by chats.createdAt ASC
-        LIMIT 18446744073709551610 offset ${offset}; `, {type: QueryTypes.SELECT});
+        where chats.id > ${id}
+        order by chats.createdAt ASC; `, {type: QueryTypes.SELECT});
 
         console.log(result);
         res.status(200).json({success:true , result : result});

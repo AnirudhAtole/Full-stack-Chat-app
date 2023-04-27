@@ -1,6 +1,7 @@
 let textbox = document.getElementById("texts");
 const token = localStorage.getItem('token');
-var updated ;
+var lastId;
+var chatQueue;
 
 textbox.addEventListener("keydown", async function(e){
 
@@ -71,28 +72,80 @@ async function sendChat(chat){
 }
 
 setInterval(async () => {
-  const response = await axios.get(`http://localhost:3000/chats/updated-chats?updation=${updated}`, {headers:{"Authorization":token}});
+  const response = await axios.get(`http://localhost:3000/chats/updated-chats?updation=${lastId}`, {headers:{"Authorization":token}});
   const {result} = response.data;
   const {id} = parseJwt(token);
-  console.log(result);
-  updated += result.length;
-  result.forEach(element => {
-    if(element.userId !== id){
-       createChat(element.name,element.chatmessages,element.createdAt)
-    }
-    else{
-      createChat("user",element.chatmessages,element.createdAt)
-    }
-  })
+  if(result.length){
+    lastId = result[result.length-1].id;
+    result.forEach(element => {
+      if(element.userId !== id){
+        createChat(element.name,element.chatmessages,element.createdAt)
+        if(!chatQueue.enqueue(element)){
+          chatQueue.dequeue();
+          chatQueue.enqueue(element);
+        }
+        else{
+          chatQueue.enqueue();
+        }
+        localStorage.setItem('chats',JSON.stringify(chatQueue.savequeue()));
+
+      }
+      else{
+        createChat("user",element.chatmessages,element.createdAt)
+        if(!chatQueue.enqueue(element)){
+          chatQueue.dequeue();
+          chatQueue.enqueue(element);
+        }
+        else{
+          chatQueue.enqueue();
+        }
+        localStorage.setItem('chats',JSON.stringify(chatQueue.savequeue()));
+      }
+    })
+  }
 }, 1000);
 
 
 window.addEventListener("DOMContentLoaded",async ()=>{
+  let result = localStorage.getItem('recentChats')
+  if(result){
+    result = JSON.parse(result);
+    const{queue , head , tail} = result;
+    chatQueue = new circularQueue(10,queue,head,tail);
+
+    const chats = chatQueue.printCqueue();
+    if(chats){
+      const id = parseJwt(token);
+      chats.forEach(element => {
+        if(element.userId === id){
+          createChat("user",element.chatmessages,element.createdAt)
+        }
+        else{
+          createChat(element.name,element.chatmessages,element.createdAt)
+        }
+      });
+  
+      lastId = chats[chats.length-1].id
+    }
+  }
+  else{
+    const recentChats = await getandShowChats(token);
+    chatQueue = new circularQueue(recentChats.length);
+    recentChats.forEach(element => {
+      chatQueue.enqueue(element);
+    });
+
+    lastId = recentChats[recentChats.length-1].id;
+
+    localStorage.setItem('chats',JSON.stringify(chatQueue.savequeue()));
+  }
+})
+
+
+async function getandShowChats(token){
   const {id} = parseJwt(token);
   const response = await axios.get('http://localhost:3000/chat/get-chats',{headers :{"Authorization":token}});
   const {result} = response.data;
-  updated = result.length;
-  console.log(updated);
   result.forEach(element => {
     if(element.userId === id){
       createChat("user",element.chatmessages,element.createdAt)
@@ -101,4 +154,94 @@ window.addEventListener("DOMContentLoaded",async ()=>{
       createChat(element.name,element.chatmessages,element.createdAt)
     }
   });
-})
+  return result.slice(-10);
+}
+
+
+
+
+
+
+
+
+// for creating queue to store and access localstorage messages
+class circularQueue{
+  constructor(size,queue=[],head=-1,tail=-1){
+      this.size = size;
+      if(queue){
+      this.queue = queue;
+      this.head = head;
+      this.tail = tail;
+      }
+      else{
+      this.queue = new Array(size)
+      this.head = -1;
+      this.tail = -1;
+      }
+      
+  }
+
+  enqueue(element){
+      if((this.tail + 1) % this.size == this.head){
+          return(false)
+      }
+
+      else if(this.head === -1){
+          this.head = 0;
+          this.tail = 0;
+          this.queue[this.tail] = element;
+      }
+      else{
+          this.tail = (this.tail + 1) % this.size;
+          this.queue[this.tail] = element;
+      }
+      return(true)
+  }
+
+  dequeue(){
+      if(this.head === -1){
+          return(false);
+      }
+
+      else if(this.head === this.tail){
+          this.temp = this.queue[this.head];
+          this.head = -1;
+          this.tail = -1;
+          return true;
+      }
+      else{
+          this.temp = this.queue[this.head];
+          this.head = (this.head + 1) % this.size;
+          return true;
+      }
+  }
+
+  printCqueue(){
+      if(this.head === -1){
+          return(false)
+      }
+
+      else if(this.tail >= this.head){
+          const arr = []
+          for(let i= this.head ; i <= this.tail ; i++){
+              arr.push(this.queue[i])
+          }
+          return(arr);
+      }
+      else{
+          const arr = []
+          for(let i = this.head ; i < this.size ; i++){
+              arr.push(this.queue[i])
+          }
+          for(let i = 0 ; i <= this.tail ; i++){
+              arr.push(this.queue[i])
+          }
+          return(arr);
+      }
+  }
+
+  savequeue(){
+      return ({queue:this.queue , head : this.head , tail : this.tail})
+  }
+}
+
