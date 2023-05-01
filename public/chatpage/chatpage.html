@@ -4,59 +4,202 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href=”https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css” rel=”stylesheet”>
     <title>Document</title>
+    <style>
+      body{font-family:'Nanum Gothic', sans-serif;
+	font-size:14px;
+	color:#777;
+	height: 600px;
+	background: linear-gradient(-45deg, #EE7752, #E73C7E, #23A6D5, #23D5AB);
+	background-size: 400% 400%;
+	-webkit-animation: Gradient 15s ease infinite;
+	-moz-animation: Gradient 15s ease infinite;
+	animation: Gradient 15s ease infinite;
+}
+@-webkit-keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@-moz-keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+@keyframes Gradient {
+	0% {
+		background-position: 0% 50%
+	}
+	50% {
+		background-position: 100% 50%
+	}
+	100% {
+		background-position: 0% 50%
+	}
+}
+
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  width: 5px;
+  background: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  width: 1em;
+  background-color: #ddd;
+  outline: 1px solid slategrey;
+  border-radius: 1rem;
+}
+
+.text-small {
+  font-size: 0.9rem;
+}
+
+.messages-box,
+.chat-box {
+  height: 510px;
+  overflow-y: scroll;
+  overflow-x: scroll;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+    </style>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 </head>
 <body>
-    <section style="background-color: rgb(23, 10, 10);">
-        <div class="container-fluid">
-      
-          <div class="row d-flex justify-content-center">
-            <div class="col-md-8 col-lg-6 col-xl-5">
-      
-              <div class="card" id="chat1" >
-                <div
-                  class="card-header d-flex justify-content-between align-items-center p-3 bg-info text-white border-bottom-0"
-                  style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
-                  <i class="fas fa-angle-left"></i>
-                  <p class="mb-0 fw-bold">Live chat</p>
-                  <i class="fas fa-times"></i>
-                </div>
+    <div class="container py-2 px-0">
+        <!-- For demo purpose-->
+        <header class="text-center">
+          <h1 class="display-4 text-white">Chat application</h1>
+          <p class="text-white lead mb-0">Talk with the users of the force</p>
+          <p id= "headerName" class="text-white lead mb-4">Welcome</p>
+        </header>
 
-                <br>
-                
+        <div class="container">
+          <!-- Button trigger modal -->
+          <button type="button" id="openCreateGroup" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            Create New Group
+          </button>
     
-
-
-
-                <div class="user-update-arrival">
-                  <p class="text-center rounded-pill border-dark" style="color: rgb(6, 68, 162); font-style: italic; font-weight: bold;">
-                    Vaibhav bhaiya joined
-                  </p>
+          <!-- Modal -->
+          <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel">Create group</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" id ='closeModal'aria-label="Close"></button>
                 </div>
 
+                <div class="modal-body">
+                  <form>
+                    <!-- Email input -->
+                    <div class="form-outline mb-4">
+                        <input type="text" id="groupname" class="form-control" />
+                        <label class="form-label" for="groupname">Enter the name of your group</label>
+                    </div>
 
-    
-                <div class="user-update-depart">
-                  <p class="text-center rounded-pill border-dark" style="color: rgb(189, 64, 6); font-style: italic; font-weight: bold;">
-                    Vaibhav bhaiya left
-                  </p>
+                    <div class="form-outline mb-4">
+                      <label for = "userList">Choose the members</label>
+                      <ul id="userList" class="list-group">
+                        
+                        <!-- <li class="list-group-item">
+                          <input class="form-check-input me-1" type="checkbox" value="1" aria-label="...">
+                          First checkbox
+                        </li> -->
+            
+                      </ul>
+                    </div>
+
+                    <div class="form-outline mb-4 text-center">
+                      <button type="button" class="btn btn-primary btn-block" id="createGroup"data-bs-dismiss="modal">Create</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="closeModal">Close</button>
+                  </div>
+                    
+                </form>
+
                 </div>
 
-                
-      
-                </div>
-                <div class="form-outline">
-                  <textarea class="form-control" id="texts" rows="4"></textarea>
-                  <label class="form-label" for="texts">Type your message</label>
-                </div>
               </div>
-      
             </div>
           </div>
-      
         </div>
-      </section>
+        
+        <div class="row rounded-lg overflow-hidden shadow">
+          <!-- Users box-->
+          <div class="col-5 px-0">
+            <div class="bg-danger">
+      
+              <div class="bg-gray px-4 bg-light">
+                <p class="h5 mb-0 py-1">Groups</p>
+              </div>
+      
+              <div class="messages-box">
+                <ul id="groupList" class="list-group rounded-0">
+      
+                </ul>
+              </div>
+            </div>
+          </div>
+          <!-- Chat Box-->
+          <div class="col-7 px-0">
+            <div
+            class="card-header d-flex justify-content-between align-items-center  bg-gradient text-dark border-bottom-0"
+            style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
+            <i class="fas fa-angle-left"></i>
+            <p class="mb-0 py-2 fw-bold">Live chat</p>
+            <i class="fas fa-times"></i>
+          </div>
+            <div class="px-2 py-2 chat-box bg-white">
+              <!-- Sender Message-->
+              
+                  <div class="row d-flex justify-content-center">
+                    <div id="chat container"class="col-xl">
+          
+                      <div id="chat-Window">
+                      <div class="card" id="chat1">
+                        <div class="user-update">
+                          <p class="text-center rounded-pill border-dark" style="color: rgb(6, 68, 162); font-style: italic; font-weight: bold;">
+                            No chats
+                          </p>
+                        </div>
+      
+        
+                        </div>
+                        <div class="form-outline">
+                          <textarea class="form-control" id="texts" rows="4"></textarea>
+                          <label class="form-label" for="texts">Type your message</label>
+                        </div>
+                      </div>
+                      </div>
+              
+                    </div>
+                  </div>
+      
+          </div>
+        </div>
+      </div>
       <script src="chatpage.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.6/axios.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>

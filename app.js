@@ -10,6 +10,7 @@ const app = express();
 
 const userRoutes = require('./routes/user');
 const chatRoutes = require('./routes/chat');
+const groupRoutes = require('./routes/group');
 
 const sequelize = require('./utils/database');
 
@@ -23,14 +24,20 @@ app.use(bodyParser.json())
 
 const User = require('./models/user');
 const Chat = require('./models/chats');
+const Group = require('./models/group');
 
 User.hasMany(Chat);
-Chat.belongsTo(User);
+Chat.belongsTo(User)
 
+User.belongsToMany(Group , {through : 'usergroup'});
+Group.belongsToMany(User , {through : 'usergroup'});
 
+Group.hasMany(Chat);
+Chat.belongsTo(Group);
 
 app.use(userRoutes);
 app.use(chatRoutes);
+app.use(groupRoutes);
 
 
 app.use((req,res)=>{

@@ -2,6 +2,7 @@ const User = require('../models/user');
 const Bcrypt  = require('bcrypt');
 const sequelize = require('../utils/database');
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 
 exports.addUser = async(req,res) =>{
     // const t = await sequelize.transaction();
@@ -82,4 +83,15 @@ exports.validateUser = async(req,res) =>{
         res.status(400).json({success:false , message :"Unable to signIn"})
         console.log(err)
     }
+}
+
+exports.showMembers = async(req,res)=>{
+    const result = await User.findAll({
+        where:{
+            id:{[Op.ne]:req.user.id}
+        },
+        attributes:['id','name']
+    })
+
+    res.json(result);
 }

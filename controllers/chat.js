@@ -6,13 +6,11 @@ const sequelize = require('../utils/database');
 exports.addChat = async(req,res)=>{
     try{
         const chatmessages = req.body.chat;
+        // const groupId = req.body.id;
 
-        await Chat.create(
-            {
-                chatmessages:chatmessages,
-                userId : req.user.dataValues.id
-            }
-        )
+        await req.user.createChat({
+            chatmessages : chatmessages,
+        })
         res.status(201).json({success:true , message : "chat submmitted"});
     }
     catch(err){
@@ -38,8 +36,7 @@ exports.getChats = async(req,res) =>{
 
 exports.getUpdatedChats = async(req,res) =>{
     try{
-        console.log(+req.query.updation)
-        const id = +req.query.updation;
+        const id = +req.query.updation || 1;
         const result = await sequelize.query(`SELECT chatmessages , chats.createdAt , chats.id ,name , userId 
         FROM chatapp.chats
         LEFT outer join chatapp.users
@@ -55,3 +52,4 @@ exports.getUpdatedChats = async(req,res) =>{
         console.log(err);
     }
 }
+
