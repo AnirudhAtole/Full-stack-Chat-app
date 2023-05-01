@@ -1,5 +1,6 @@
 let textbox = document.getElementById("texts");
 const token = localStorage.getItem('token');
+const ChatWindow = document.getElementById('chat-Window');
 var lastId;
 var chatQueue;
 var selected;
@@ -16,9 +17,18 @@ document.getElementById('groupList').addEventListener("click",function(e){
       current[0].classList.remove("active");
     }
     e.target.classList.add('active');
+    console.log(e.target.children.children)
     selected = e.target.children[0].innerText;
   }
-
+  let cards = document.getElementsByClassName('card')
+  for(element of cards){
+  if(element.id !==`chat${selected}`){
+    element.setAttribute('hidden','hidden')
+  }
+  else{
+    element.removeAttribute('hidden')
+  }
+}
 })
 
 
@@ -72,6 +82,7 @@ groupList.appendChild(li);
 document.getElementById('userList').innerHTML = '';
 }
 
+
 async function getAllGroups(){
   try{
     const result = await axios.get("http://localhost:3000/user/get-group",{headers :{"Authorization":token}});
@@ -80,11 +91,20 @@ async function getAllGroups(){
       const {groupName , id , createdAt} = group;
       const timeCreated = utcTodate(createdAt);
       createGroupFrontEnd(groupName,id,timeCreated);
+      createCard(id);
     });
   }
   catch(err){
     console.log(err);
   }
+}
+
+function createCard(id){
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = `chat${id}`;
+  div.setAttribute('hidden','hidden');
+  ChatWindow.append(div);
 }
 
 
@@ -97,9 +117,10 @@ async function createGroup(){
     users : memberList
   }
   const result = await axios.post('http://localhost:3000/group/create-group',groupData,{headers :{"Authorization":token}})
-  const {id , createdAt} = result.data
+  const {id , createdAt} = result.data;
   const timeCreated = utcTodate(createdAt);
   createGroupFrontEnd(result.data.groupName,id,timeCreated);
+  createCard(id);
   alert("group created succesfully");
   }
   catch(err){
@@ -147,8 +168,21 @@ function parseJwt (token) {
   return JSON.parse(jsonPayload);
 }
 
-function createChat(sender,chat,time){
-    let chat1 = document.getElementById('chat1')
+function distributeChat(chat){
+  const {name , userId , groupId , chatmessages , createdAt} = chat;
+  const chatCard = document.getElementById(`chat${groupId}`);
+  const id = parseJwt(token);
+  if(id === userId){
+    createChat("you",chatmessages,createdAt,chatCard) 
+  }
+  else{
+    createChat(name,chatmessages,createdAt,chatCard) 
+  }
+
+}
+
+
+function createChat(sender,chat,time,chatSection ){
     let div = document.createElement('div');
     if(sender === "user"){
         div.className = "chat-user"
@@ -180,13 +214,13 @@ function createChat(sender,chat,time){
           </div>
         </div>`
     }
-    chat1.appendChild(div);
+    chatSection.appendChild(div);
 }
 
 
 async function sendChat(chat){
   try{
-    const result = await axios.post('http://localhost:3000/chat/send-chat',{chat},{headers :{"Authorization":token}});
+    const result = await axios.post('http://localhost:3000/chat/send-chat',{chat:chat,id:selected},{headers :{"Authorization":token}});
     return(result.data.success);
   }
   catch(err){
@@ -196,14 +230,13 @@ async function sendChat(chat){
 
 setInterval(async () => {
     if(selected){
-      const response = await axios.get(`http://localhost:3000/chats/updated-chats?updation=${lastId}`, {headers:{"Authorization":token}});
+    textbox.removeAttribute('disabled');
+    const response = await axios.get(`http://localhost:3000/chats/updated-chats?updation=${lastId}`, {headers:{"Authorization":token}});
     const {result} = response.data;
-    const {id} = parseJwt(token);
     if(result.length){
       lastId = result[result.length-1].id;
       result.forEach(element => {
-        if(element.userId !== id){
-          createChat(element.name,element.chatmessages,element.createdAt)
+        distributeChat(element);
           if(!chatQueue.enqueue(element)){
             chatQueue.dequeue();
             chatQueue.enqueue(element);
@@ -212,23 +245,11 @@ setInterval(async () => {
             chatQueue.enqueue();
           }
           localStorage.setItem('chats',JSON.stringify(chatQueue.savequeue()));
-  
-        }
-        else{
-          createChat("user",element.chatmessages,element.createdAt)
-          if(!chatQueue.enqueue(element)){
-            chatQueue.dequeue();
-            chatQueue.enqueue(element);
-          }
-          else{
-            chatQueue.enqueue();
-          }
-          localStorage.setItem('chats',JSON.stringify(chatQueue.savequeue()));
-        }
       })
     }
     }
     else{
+
 
     }
   }, 1000);
@@ -248,12 +269,7 @@ window.addEventListener("DOMContentLoaded",async ()=>{
     if(chats){
       const id = parseJwt(token);
       chats.forEach(element => {
-        if(element.userId === id){
-          createChat("user",element.chatmessages,element.createdAt)
-        }
-        else{
-          createChat(element.name,element.chatmessages,element.createdAt)
-        }
+        distributeChat(element);
       });
   
       lastId = chats[chats.length-1].id
@@ -286,12 +302,7 @@ async function getandShowChats(token){
   console.log(result.length)
   if(result.length > 0){
     result.forEach(element => {
-      if(element.userId === id){
-        createChat("user",element.chatmessages,element.createdAt)
-      }
-      else{
-        createChat(element.name,element.chatmessages,element.createdAt)
-      }
+      distributeChat(element)
     });
     return result.slice(-10);
   }

@@ -1,4 +1,4 @@
-const { QueryTypes } = require('sequelize');
+const { QueryTypes, Op } = require('sequelize');
 const Chat = require('../models/chats');
 const sequelize = require('../utils/database');
 const Group = require('../models/group');
@@ -15,7 +15,7 @@ exports.creategroup = async(req,res) =>{
     console.log(...members);
     await group.addUsers([...members])
 
-    res.status(200).json({groupName : group.groupName , id: group.id , timeCreated : group.createdAt});
+    res.status(200).json({groupName : group.groupName , id: group.id , createdAt : group.createdAt});
 }
 
 
@@ -49,4 +49,20 @@ exports.getGroupChats = async(req,res) =>{
     })
     console.log(chats);
     res.status(200).json(chats);
+}
+
+exports.getGroupChats = async(req,res)=>{
+    const groups = await req.user.getGroups();
+    const id = [];
+    groups.forEach(element => {
+        id.push(element.id);
+    });
+    const chats = await Chat.findAll({
+        where:{
+            groupId:{
+                [Op.or]:id
+            }
+        }
+    })
+    res.json(chats);
 }
