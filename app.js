@@ -25,15 +25,24 @@ app.use(bodyParser.json())
 const User = require('./models/user');
 const Chat = require('./models/chats');
 const Group = require('./models/group');
+const Admin = require('./models/admin');
+
 
 User.hasMany(Chat);
-Chat.belongsTo(User)
+Chat.belongsTo(User);
 
 User.belongsToMany(Group , {through : 'usergroup'});
 Group.belongsToMany(User , {through : 'usergroup'});
 
 Group.hasMany(Chat);
 Chat.belongsTo(Group);
+
+User.hasOne(Admin);
+Admin.belongsTo(User);
+
+Admin.belongsToMany(Group , {through : 'admingroup'});
+Group.belongsToMany(Admin , {through : 'admingroup'});
+
 
 app.use(userRoutes);
 app.use(chatRoutes);
@@ -46,7 +55,7 @@ app.use((req,res)=>{
 
 
 
-sequelize.sync()
+sequelize.sync({force:true})
 .then(()=>{
     app.listen(3000);
 })

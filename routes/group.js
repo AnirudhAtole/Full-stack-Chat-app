@@ -6,7 +6,7 @@ const Authenticate = require('../authenticate/authenticate');
 router.post('/group/create-group',Authenticate.authenticate,groupController.creategroup);
 router.get('/user/get-group',Authenticate.authenticate,groupController.getGroups);
 router.get('/group/get-users',groupController.getUsers);
-router.get('/chats/group-chats',groupController.getGroupChats);
-router.get('/user/group-chats',Authenticate.authenticate, groupController.getGroupChats);
+router.add('/group/add-admin',Authenticate.authenticate,groupController.addAdmin);
+router.get('/group/get-admins',groupController.getAdmins);
 
 module.exports = router;

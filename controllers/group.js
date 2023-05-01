@@ -1,7 +1,6 @@
-const { QueryTypes, Op } = require('sequelize');
-const Chat = require('../models/chats');
 const sequelize = require('../utils/database');
 const Group = require('../models/group');
+const Admin = require('../models/admin');
 const User = require('../models/user');
 
 exports.creategroup = async(req,res) =>{
@@ -10,6 +9,13 @@ exports.creategroup = async(req,res) =>{
     const group = await req.user.createGroup({
         groupName : groupName
     })
+
+    const admin = await req.user.createAdmin({
+        adminName : req.user.name
+    })
+
+    group.addAdmin(admin);
+
     console.log(group);
     const members = req.body.users;
     console.log(...members);
@@ -40,29 +46,20 @@ exports.getUsers = async(req,res) =>{
     res.status(200).json(result);
 }
 
-exports.getGroupChats = async(req,res) =>{
-    const groupId = req.body.id;
-    const chats = await Chat.findAll({
-        where:{
-            groupId:groupId
-        }
+exports.addAdmin = async(req,res) =>{
+    const group = await Group.findByPk(req.groupId);
+    const user = await User.findByPk(req.userId);
+
+    const admin = user.createAdmin({
+        adminName : user.name
     })
-    console.log(chats);
-    res.status(200).json(chats);
+
+    group.addAdmin(admin);
+
 }
 
-exports.getGroupChats = async(req,res)=>{
-    const groups = await req.user.getGroups();
-    const id = [];
-    groups.forEach(element => {
-        id.push(element.id);
-    });
-    const chats = await Chat.findAll({
-        where:{
-            groupId:{
-                [Op.or]:id
-            }
-        }
-    })
-    res.json(chats);
+exports.getAdmins = async(req,res) =>{
+    const group = await Group.findByPk(req.groupId);
+    const adminList = await group.getAdmins();
+    res.json(adminList);
 }
