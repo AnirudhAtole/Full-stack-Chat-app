@@ -5,8 +5,10 @@ const Authenticate = require('../authenticate/authenticate');
 
 router.post('/group/create-group',Authenticate.authenticate,groupController.creategroup);
 router.get('/user/get-group',Authenticate.authenticate,groupController.getGroups);
-router.get('/group/get-users',groupController.getUsers);
-router.add('/group/add-admin',Authenticate.authenticate,groupController.addAdmin);
-router.get('/group/get-admins',groupController.getAdmins);
+router.get('/group/get-members',Authenticate.authenticate,groupController.getUsersAndAdmins);
+router.post('/group/add-admin',Authenticate.authenticate,groupController.addAdmin);
+router.post('/group/remove-member',groupController.removeMember);
+router.post('/group/add-member',Authenticate.authenticate,groupController.addMember);
+router.get('/group/get-members-admins/:id',groupController.getUsersAndAdminofGroup);
 
 module.exports = router;

@@ -55,7 +55,7 @@ app.use((req,res)=>{
 
 
 
-sequelize.sync({force:true})
+sequelize.sync()
 .then(()=>{
     app.listen(3000);
 })

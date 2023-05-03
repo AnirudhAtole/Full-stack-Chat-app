@@ -1,7 +1,11 @@
 let textbox = document.getElementById("texts");
 const token = localStorage.getItem('token');
 const ChatWindow = document.getElementById('chat-Window');
-var lastId;
+const chatSendBox = document.getElementById('chatSendBox');
+const groupTitle = document.getElementById('group-title');
+
+
+var lastId = 0;
 var chatQueue;
 var selected;
 
@@ -82,29 +86,114 @@ groupList.appendChild(li);
 document.getElementById('userList').innerHTML = '';
 }
 
+async function getGroupMembers(){
+  const result = await axios.get(`http://localhost:3000/group/get-members`,{headers :{"Authorization":token}});
+  return result.data;
+}
+
+
+
 
 async function getAllGroups(){
   try{
     const result = await axios.get("http://localhost:3000/user/get-group",{headers :{"Authorization":token}});
-    const groupArray = result.data;
+    if(result.data){
+      const groupArray = result.data;
     groupArray.forEach(group => {
       const {groupName , id , createdAt} = group;
       const timeCreated = utcTodate(createdAt);
       createGroupFrontEnd(groupName,id,timeCreated);
       createCard(id);
     });
+    const memberandAdminInfo = await axios.get(`http://localhost:3000/group/get-members`,{headers :{"Authorization":token}});
+    const {members , adminNames} = await memberandAdminInfo.data;
+    const isAdmin = createAdminInfo(adminNames);
+    createMembers(members,isAdmin);
+
+    }
+
   }
   catch(err){
     console.log(err);
   }
 }
 
-function createCard(id){
+async function createCard(id){
   const div = document.createElement('div');
+  const divInfo = document.createElement('div');
+  divInfo.className = 'group-info';
   div.className = 'card';
+
   div.id = `chat${id}`;
+  divInfo.innerHTML = `<label>Group Members</label>
+  <ul class="list-inline" id="membersGroup${id}">
+  </ul>
+
+  <label>Group Admins</label>
+  <ul class="list-inline" id="adminsGroup${id}">
+  </ul>` 
+  div.appendChild(divInfo);
   div.setAttribute('hidden','hidden');
-  ChatWindow.append(div);
+  ChatWindow.insertBefore(div,chatSendBox);
+}
+
+function createAdminInfo(adminInfo){
+  let isAdmin = []
+  let {id}= parseJwt(token)
+  for(let i = 0; i<adminInfo.length ; i++){
+    const groupId = adminInfo[i].admingroup.groupId;
+    console.log("group id is" + groupId)
+    const adminUl = document.getElementById(`adminsGroup${groupId}`);
+    const li = document.createElement('li');
+    li.className = "list-inline-item bg-warning rounded-3";
+    li.appendChild(document.createTextNode(adminInfo[i].adminName));
+    if(adminInfo[i].userId === id){
+      isAdmin.push(groupId);
+    }
+    console.log(li);
+    adminUl.appendChild(li);
+  }
+  return isAdmin;
+}
+
+async function createMembers(memberInfo,isAdmin){
+  for(let i=0;i < memberInfo.length ; i++){
+    const userId = memberInfo[i].id;
+    const groupId = memberInfo[i].usergroup.groupId;
+    let ul = document.getElementById(`membersGroup${groupId}`)
+    let li = document.createElement('li');
+    li.className = "list-inline-item bg-info rounded-2";
+    li.appendChild(document.createTextNode(memberInfo[i].name));
+
+    if(isAdmin.includes(groupId)){
+      let removeButton = document.createElement('button');
+      removeButton.className = "btn-danger";
+      removeButton.appendChild(document.createTextNode("X"));
+      removeButton.onclick = function(){
+        axios.post(`http://localhost:3000/group/remove-member`,{groupId:groupId,userId:userId})
+        .then(
+          ul.removeChild(li)
+        )
+      }
+      let addAdmin = document.createElement('button');
+      addAdmin.className = "btn-secondary";
+      addAdmin.appendChild(document.createTextNode("+"));
+      addAdmin.onclick =async function(){
+      const result = await axios.post("http://localhost:3000/group/add-admin",{groupId:groupId,userId:userId},{headers :{"Authorization":token}});
+      if(result.data.success){
+        const adminUl = document.getElementById(`adminsGroup${groupId}`);
+        const adminLi = document.createElement('li');
+        adminLi.className = "list-inline-item bg-warning rounded-3";
+        adminLi.appendChild(document.createTextNode(memberInfo[i].name));
+        adminUl.appendChild(adminLi);
+        ul.removeChild(li);
+      }
+      }
+      li.appendChild(removeButton);
+      li.appendChild(addAdmin);
+    }
+    ul.appendChild(li);
+}
 }
 
 
@@ -118,9 +207,13 @@ async function createGroup(){
   }
   const result = await axios.post('http://localhost:3000/group/create-group',groupData,{headers :{"Authorization":token}})
   const {id , createdAt} = result.data;
+  const memberandAdminInfo = await axios.get(`http://localhost:3000/group/get-members-admins/${id}`);
   const timeCreated = utcTodate(createdAt);
+  const {members , adminNames} = memberandAdminInfo.data;
   createGroupFrontEnd(result.data.groupName,id,timeCreated);
   createCard(id);
+  const isAdmin = createAdminInfo(adminNames);
+  createMembers(members,isAdmin);
   alert("group created succesfully");
   }
   catch(err){
@@ -170,10 +263,11 @@ function parseJwt (token) {
 
 function distributeChat(chat){
   const {name , userId , groupId , chatmessages , createdAt} = chat;
+  console.log(userId )
   const chatCard = document.getElementById(`chat${groupId}`);
-  const id = parseJwt(token);
+  const {id} = parseJwt(token);
   if(id === userId){
-    createChat("you",chatmessages,createdAt,chatCard) 
+    createChat("user",chatmessages,createdAt,chatCard) 
   }
   else{
     createChat(name,chatmessages,createdAt,chatCard) 
@@ -217,6 +311,7 @@ function createChat(sender,chat,time,chatSection ){
     chatSection.appendChild(div);
 }
 
+console.log(parseJwt(token))
 
 async function sendChat(chat){
   try{
