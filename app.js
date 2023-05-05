@@ -5,7 +5,24 @@ let express = require('express');
 const bodyParser = require('body-parser');
 var cors = require('cors');
 
-const app = express();
+const app = express()
+
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
+
+io.on("connection",socket=>{
+    socket.on("send-message",(data , group)=>{
+        socket.to(group).emit("receive-message",data)
+    })
+
+    socket.on("join-group",group=>{
+            if(group !== undefined){
+                socket.join(group)
+            }
+        });
+
+
+})
 
 
 const userRoutes = require('./routes/user');
@@ -16,7 +33,7 @@ const sequelize = require('./utils/database');
 
 app.use(cors(
     {
-        origin: "http://127.0.0.1:3000"
+        origin: ["http://127.0.0.1:3000"]
     }
 ));
 app.use(bodyParser.json())
@@ -26,6 +43,8 @@ const User = require('./models/user');
 const Chat = require('./models/chats');
 const Group = require('./models/group');
 const Admin = require('./models/admin');
+const e = require('express');
+const { group } = require('console');
 
 
 User.hasMany(Chat);
@@ -54,9 +73,9 @@ app.use((req,res)=>{
 })
 
 
-
 sequelize.sync()
 .then(()=>{
-    app.listen(3000);
+    server.listen(3000);
 })
 .catch(err => console.log(err));
+

@@ -36,6 +36,7 @@ exports.creategroup = async(req,res) =>{
 
 
 exports.getGroups = async(req , res) =>{
+    console.log(req.user);
     const groups = await req.user.getGroups(
     {
         attributes:['id','groupName','createdAt']
