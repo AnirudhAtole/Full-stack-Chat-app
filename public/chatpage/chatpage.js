@@ -3,6 +3,7 @@ const token = localStorage.getItem('token');
 const ChatWindow = document.getElementById('chat-Window');
 const chatSendBox = document.getElementById('chatSendBox');
 const groupTitle = document.getElementById('group-title');
+const adminArray = []
 
 
 var lastId = 0;
@@ -33,6 +34,12 @@ document.getElementById('groupList').addEventListener("click",function(e){
     e.target.classList.add('active');
     // socket.emit("leave-group",selected);
     selected = e.target.children[0].innerText;
+    if(adminArray.includes(selected)){
+      document.getElementById("invite-email-container").removeAttribute("hidden")
+    }
+    else{
+      document.getElementById("invite-email-container").setAttribute('hidden',"hidden")
+    }
     abletotext(selected);
     // socket.emit('join-group',selected);
   }
@@ -55,6 +62,17 @@ function abletotext(selected){
   }
 }
 
+document.getElementById("invite-email-btn").addEventListener('click',inviteMember);
+async function inviteMember(e){
+  e.preventDefault();
+  const email = document.getElementById("invite-email").value;
+  const result = await axios.post("http://localhost:3000/user/send-invite",{email:email , groupId:selected},{headers :{"Authorization":token}});
+  if(result.data.success){
+    email = "";
+    alert(result.data.message);
+  }
+
+}
 
 
 textbox.addEventListener("keydown", async function(e){  
@@ -184,6 +202,7 @@ function createAdminInfo(adminInfo){
     li.appendChild(document.createTextNode(adminInfo[i].adminName));
     if(adminInfo[i].userId === id){
       isAdmin.push(groupId);
+      adminArray.push(groupId);
     }
     console.log(li);
     adminUl.appendChild(li);

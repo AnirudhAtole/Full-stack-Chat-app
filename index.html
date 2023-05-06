@@ -1,31 +1,90 @@
-<div class="group-info">
-  <label>Group Members</label>
-   <ul class="list-inline" id="membersGroup">
-     <li class="list-inline-item bg-info rounded-2">item 1<button class="btn-danger">X</button><button class="btn-secondary">+</button></li>
-     <li class="list-inline-item bg-info rounded-2">Item 2<button class="btn-danger">X</button><button class="btn-secondary">+</button></li>
-     <li class="list-inline-item bg-info rounded-2">Item 3<button class="btn-danger">X</button><button class="btn-secondary">+</button></li>
-     <li class="list-inline-item bg-info rounded-2">Item 4<button class="btn-danger">X</button><button class="btn-secondary">+</button></li>
-     <li class="list-inline-item bg-info rounded-2">Item 5<button class="btn-danger">X</button><button class="btn-secondary">+</button></li>
-   </ul>
+<!DOCTYPE html>
+            <html lang="en">
+            <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Forgot Password</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+            </head>
+            <body>
+            <section class=" gradient-form text-center" style="background-color: rgb(29, 25, 25);">
+                <div class="container py-5">
+                <div class="row d-flex justify-content-center align-items-center h-100">
+                    <div class="col-xl-10">
+                    <div class="card rounded-3 text-black">
+                        <div >
+                        <div >
+                            <div class="card-body p-md-5 mx-md-4">
+            
+                            <div class="text-center">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToh1HBvZO4U3AV1fc6HI-tLlmCDwKlki8D7g&usqp=CAU"
+                                style="width: 185px;" alt="logo">
+                                <h4 class="mt-1 mb-5 pb-1">Accept the invite</h4>
+                            </div>
+            
+                            <form id="my-form" class="text-center">
+                                <div class="form-outline mb-4">
+                                <input type="password" id="email" class="form-control"
+                                    placeholder="Enter new password" />
+                                <label class="form-label" for="email">Enter your email</label>
+                                </div>
+                                <div class="form-outline mb-4">
+                                    <input type="password" id="password" class="form-control"
+                                    placeholder="Confirm Password" />
+                                    <label class="form-label" for="password">password</label>
+                                </div>
 
-   <label>Group Admins</label>
-   <ul class="list-inline" id="adminsGroup">
-     <li class="list-inline-item bg-warning rounded-3 ">Salman bhai</li>
-     <li class="list-inline-item bg-warning rounded-3 ">sharukh</li>
-     <li class="list-inline-item bg-warning rounded-3 ">yo yo </li>
-   </ul>
-</div>
+                                <div class="form-group row">
+                                  <label for="staticEmail" class="col-sm-2 col-form-label">Invited by </label>
+                                  <div class="col-sm-10">
+                                    <input type="text" readonly class="form-control-plaintext" id="user" value="User 2">
+                                  </div>
 
-<div class="chat-user">
-  <div class="d-flex justify-content-between">
-    <p class="small mb-1 text-muted">${time}</p>
-    <p class="small mb-1">You</p>
-  </div>
-  <div class="d-flex flex-row justify-content-end mb-4">
-    <div class="p-3 me-3 border" style="border-radius: 15px; background-color: #50C878;">
-      <p class="small mb-0">${chat}</p>
-    </div>
-    <img src="https://img.icons8.com/clouds/1x/mando.png"
-      alt="avatar 1" style="width: 45px; height: 100%;">
-  </div>
-</div>
+                                  <label for="staticEmail" class="col-sm-2 col-form-label">To group</label>
+                                  <div class="col-sm-10">
+                                    <input type="text" readonly class="form-control-plaintext" id="group" value="Boys 2">
+                                  </div>
+                                  
+                                </div>
+
+                                <div class="row">
+                                <div class="col-sm-12 text-center pt-1 mb-5 pb-1">
+                                    <button class="btn btn-info btn-block fa-lg gradient-custom-2 mb-3" type="submit">Confirm</button>
+                                </div>
+
+                          
+                                </div>
+            
+                            </form>
+            
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </section>
+            <script>
+                const form = document.getElementById("my-form");
+                form.addEventListener("submit",formSubmit);
+                async function formSubmit(e){
+                  e.preventDefault();
+                  const email = document.getElementById("email").value;
+                  const password = document.getElementById("password").value;
+                  let result = await axios.post('http://localhost:3000/user/checkUser',{email,password});
+                  if(result.data.success){
+                    const validate = result.data.success;
+                    await axios.post('http://localhost:3000/user/addMember/:${}',{validate})
+                    alert("You will be added in group");
+                  }
+                  else{
+                    alert(result.data.message)
+                  }
+                }
+                
+            </script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+            </body>
+            </html>

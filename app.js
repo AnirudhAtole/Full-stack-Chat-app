@@ -33,6 +33,7 @@ io.on("connection",socket=>{
 const userRoutes = require('./routes/user');
 const chatRoutes = require('./routes/chat');
 const groupRoutes = require('./routes/group');
+const requestRoutes = require('./routes/inviteusers');
 
 const sequelize = require('./utils/database');
 
@@ -48,10 +49,14 @@ const User = require('./models/user');
 const Chat = require('./models/chats');
 const Group = require('./models/group');
 const Admin = require('./models/admin');
+const inviterequest = require('./models/inviterequest');
 
 
 User.hasMany(Chat);
 Chat.belongsTo(User);
+
+Admin.hasMany(inviterequest);
+inviterequest.belongsTo(Admin);
 
 User.belongsToMany(Group , {through : 'usergroup'});
 Group.belongsToMany(User , {through : 'usergroup'});
@@ -76,7 +81,7 @@ app.use((req,res)=>{
 })
 
 
-sequelize.sync()
+sequelize.sync({force:true})
 .then(()=>{
     server.listen(3000);
 })

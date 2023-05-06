@@ -123,15 +123,9 @@
                     <div class="form-outline mb-4">
                       <label for = "userList">Choose the members</label>
                       <ul id="userList" class="list-group">
-                        
-                        <!-- <li class="list-group-item">
-                          <input class="form-check-input me-1" type="checkbox" value="1" aria-label="...">
-                          First checkbox
-                        </li> -->
             
                       </ul>
                     </div>
-
                     <div class="form-outline mb-4 text-center">
                       <button type="button" class="btn btn-primary btn-block" id="createGroup"data-bs-dismiss="modal">Create</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="closeModal">Close</button>
@@ -147,6 +141,7 @@
         </div>
         
         <div class="row rounded-lg overflow-hidden shadow">
+          
           <!-- Users box-->
           <div class="col-5 px-0">
             <div class="bg-danger">
@@ -177,6 +172,15 @@
           </div>
           <!-- Chat Box-->
           <div class="col-7 px-0">
+
+            <div class="input-group" id="invite-email-container" hidden>
+              <div class="form-outline">
+                <input type="email" id="invite-email" class="form-control" />
+                <label class="form-label" for="form1">Search</label>
+              </div>
+              <button type="button" id="invite-email-btn" class="btn btn-primary">invite member</button>
+            </div>
+
             <div
             class="card-header d-flex justify-content-between align-items-center  bg-gradient text-dark border-bottom-0"
             style="border-top-left-radius: 15px; border-top-right-radius: 15px;">
