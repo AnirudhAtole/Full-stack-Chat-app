@@ -31,9 +31,10 @@ document.getElementById('groupList').addEventListener("click",function(e){
       current[0].classList.remove("active");
     }
     e.target.classList.add('active');
+    // socket.emit("leave-group",selected);
     selected = e.target.children[0].innerText;
     abletotext(selected);
-    socket.emit('join-group',selected)
+    // socket.emit('join-group',selected);
   }
   let cards = document.getElementsByClassName('card')
   for(element of cards){
@@ -130,17 +131,21 @@ async function getAllGroups(){
     const result = await axios.get("http://localhost:3000/user/get-group",{headers :{"Authorization":token}});
     if(result.data){
       const groupArray = result.data;
+      const groupids = []
     groupArray.forEach(group => {
       const {groupName , id , createdAt} = group;
       const timeCreated = utcTodate(createdAt);
       createGroupFrontEnd(groupName,id,timeCreated);
+      groupids.push(id.toString());
       createCard(id);
     });
+    socket.emit("join-groups",groupids);
     const memberandAdminInfo = await axios.get(`http://localhost:3000/group/get-members`,{headers :{"Authorization":token}});
     const {members , adminNames} = await memberandAdminInfo.data;
     const isAdmin = createAdminInfo(adminNames);
     createMembers(members,isAdmin);
     }
+
 
   }
   catch(err){

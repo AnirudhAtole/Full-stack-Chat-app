@@ -13,17 +13,22 @@ const io = require('socket.io')(server);
 io.on("connection",socket=>{
     socket.on("send-message",(data , group)=>{
         socket.to(group).emit("receive-message",data)
+        console.log(socket.rooms)
     })
 
-    socket.on("join-group",group=>{
-            if(group !== undefined){
-                socket.join(group)
-            }
+    socket.on("join-groups",groups=>{
+        socket.join(groups);
+        console.log(groups)
         });
+    
+    // socket.on("leave-group",group =>{
+    //     if(group !== undefined){
+    //         socket.leave(group);
+    //     }
+    // })
 
 
 })
-
 
 const userRoutes = require('./routes/user');
 const chatRoutes = require('./routes/chat');
@@ -43,8 +48,6 @@ const User = require('./models/user');
 const Chat = require('./models/chats');
 const Group = require('./models/group');
 const Admin = require('./models/admin');
-const e = require('express');
-const { group } = require('console');
 
 
 User.hasMany(Chat);
