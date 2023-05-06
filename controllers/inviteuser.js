@@ -32,7 +32,8 @@ exports.sendInvite = async(req,res) =>{
                     userId : req.user.id
                 }
             })
-            const check = await group.has(user);
+            const check = await group.hasUser(user);
+            console.log(group)
             if(check){
                 res.json({success:true , message : "User with this email is already in this group huhhh sussy...."})
             }
@@ -42,8 +43,9 @@ exports.sendInvite = async(req,res) =>{
                 id : uuid,
                 status : true,
                 senderName : req.user.name,
+                groupName : group.groupName,
                 email : email,
-                groupId : group.groupName,
+                groupId : group.id,
                 adminId : admin.id
             })
     
@@ -76,6 +78,7 @@ exports.sendInvite = async(req,res) =>{
     }
     }
     catch(err){
+        console.log(err)
         res.status(400).json({success:false})
     }
     

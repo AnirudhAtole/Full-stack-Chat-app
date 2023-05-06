@@ -3,7 +3,7 @@ const token = localStorage.getItem('token');
 const ChatWindow = document.getElementById('chat-Window');
 const chatSendBox = document.getElementById('chatSendBox');
 const groupTitle = document.getElementById('group-title');
-const adminArray = []
+let adminArray = []
 
 
 var lastId = 0;
@@ -34,10 +34,20 @@ document.getElementById('groupList').addEventListener("click",function(e){
     e.target.classList.add('active');
     // socket.emit("leave-group",selected);
     selected = e.target.children[0].innerText;
-    if(adminArray.includes(selected)){
+    let check = false;
+    for(let admin  of adminArray){
+      if(selected == admin){
+        check = true;
+        break
+      }
+    }
+    console.log(check)
+    if(check){
+      console.log("IM in")
       document.getElementById("invite-email-container").removeAttribute("hidden")
     }
     else{
+      console.log("IM NOT")
       document.getElementById("invite-email-container").setAttribute('hidden',"hidden")
     }
     abletotext(selected);
@@ -201,7 +211,7 @@ function createAdminInfo(adminInfo){
     li.className = "list-inline-item bg-warning rounded-3";
     li.appendChild(document.createTextNode(adminInfo[i].adminName));
     if(adminInfo[i].userId === id){
-      isAdmin.push(groupId);
+      isAdmin.push(groupId.toString);
       adminArray.push(groupId);
     }
     console.log(li);

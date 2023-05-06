@@ -4,7 +4,7 @@ const sequelize = require('../utils/database');
 
 const inviterequest = sequelize.define('inviterequest',{
     id :{
-        type : Sequelize.INTEGER,
+        type : Sequelize.STRING,
         allowNull : false,
         primaryKey : true
     },

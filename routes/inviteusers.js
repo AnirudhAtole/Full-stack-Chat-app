@@ -1,6 +1,6 @@
 const express = require('express');
-const inviteUserController = require('../controllers/inviteuser');
 const router = express.Router();
+const inviteUserController = require('../controllers/inviteuser');
 const Authenticate = require('../authenticate/authenticate');
 
 router.post('/user/send-invite',Authenticate.authenticate ,inviteUserController.sendInvite)

@@ -74,14 +74,14 @@ Group.belongsToMany(Admin , {through : 'admingroup'});
 app.use(userRoutes);
 app.use(chatRoutes);
 app.use(groupRoutes);
-
+app.use(requestRoutes);
 
 app.use((req,res)=>{
     res.sendFile(path.join(__dirname , `public/${req.url}`));
 })
 
 
-sequelize.sync({force:true})
+sequelize.sync()
 .then(()=>{
     server.listen(3000);
 })
