@@ -1,7 +1,8 @@
 const { QueryTypes, Op } = require('sequelize');
-const Chat = require('../models/chats');
 const sequelize = require('../utils/database');
-const Group = require('../models/group');
+const s3services = require('../services/s3service')
+const crypto = require('crypto');
+const Mediafiles = require('../models/mediafiles');
 
 
 exports.addChat = async(req,res)=>{
@@ -64,5 +65,29 @@ exports.getUpdatedChats = async(req,res) =>{
     catch(err){
         console.log(err);
     }
+}
+
+exports.sendFile = async(req,res)=>{
+    console.log(req)
+    const groupId = req.body.groupId;
+    const imageName = crypto.randomBytes(16).toString('hex');
+    const imageNameWithextension = imageName + req.file.originalname;
+    const fileurl = await s3services.uploadToS3(req.file.buffer,imageNameWithextension);
+
+    Mediafiles.create({
+        userId : req.user.id,
+        groupId : groupId,
+        url : fileurl,
+        filename : req.file.originalname,
+    })
+
+    await req.user.createChat({
+        chatmessages : fileurl,
+        groupId : groupId
+    })
+    res.status(201).json({success:true , message : "Media file successfully submitted" , url:fileurl});
+
+
+
 }
 

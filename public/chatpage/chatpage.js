@@ -66,6 +66,7 @@ document.getElementById('groupList').addEventListener("click",function(e){
 
 function abletotext(selected){
   if(selected){
+    document.getElementById('send-file-container').removeAttribute('hidden');
     textbox.removeAttribute('disabled')}
   else{
 
@@ -144,6 +145,17 @@ groupList.appendChild(li);
 document.getElementById('userList').innerHTML = '';
 }
 
+const isValidUrl = urlString =>{
+      var inputElement = document.createElement('input');
+      inputElement.type = 'url';
+      inputElement.value = urlString;
+
+      if (!inputElement.checkValidity()) {
+        return false;
+      } else {
+        return true;
+      }
+    } 
 
 
 async function getGroupMembers(){
@@ -152,7 +164,33 @@ async function getGroupMembers(){
 }
 
 
+async function uploadFile(){
+  const selectedFile = document.getElementById("send-files-input").files[0];
+  console.log(selectedFile)
+  const formdata = new FormData();
+  formdata.append('file',selectedFile);
+  formdata.append('groupId',selected);
+  console.log(parseJwt(token))
+  const result = await axios.post("http://localhost:3000/chats/send-file",formdata,{headers :{"Authorization":token}})
+  console.log(result)
+  const chat = textbox.value;
+          const {name , id} = parseJwt(token)
+          const data = {
+            name : name,
+            userId : id,
+            groupId : selected,
+            chatmessages : result.data.url,
+            createdAt : new Date()
+          }
+          const chatCard = document.getElementById(`chat${selected}`);
+          createChat("user",chat,new Date(),chatCard) 
+          socket.emit("send-message" ,data,selected)
+          sendChat(chat);
+    document.getElementById("send-files-input").value = null;
+}
 
+const sendFileButton = document.getElementById("send-files-button");
+sendFileButton.addEventListener('click',uploadFile)
 
 async function getAllGroups(){
   try{
@@ -342,6 +380,41 @@ function distributeChat(chat){
 
 
 function createChat(sender,chat,time,chatSection ){
+  if(isValidUrl(chat)){
+    let div = document.createElement('div');
+    if(sender === "user"){
+        div.className = "chat-user"
+        div.innerHTML = `
+        <div class="d-flex justify-content-between">
+          <p class="small mb-1 text-muted">${time}</p>
+          <p class="small mb-1">You</p>
+        </div>
+        <div class="d-flex flex-row justify-content-end mb-4">
+          <div class="p-3 me-3 border" style="border-radius: 15px; background-color: #50C878;">
+          <a href=${chat} => Media sent by you</a>
+          </div>
+          <img src="https://img.icons8.com/clouds/1x/mando.png"
+            alt="avatar 1" style="width: 45px; height: 100%;">
+        </div>`
+    }
+    else{
+        div.className = "chat-other"
+        div.innerHTML = `
+        <div class="d-flex justify-content-between">
+          <p class="small mb-1 text-muted">${sender}</p>
+          <p class="small mb-1">${time}</p>
+        </div>
+        <div class="d-flex flex-row justify-content-start mb-4">
+          <img src="https://img.icons8.com/emoji/1x/man-beard.png"
+            alt="avatar 1" style="width: 45px; height: 100%;">
+          <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(57, 192, 237,.2);">
+          <a href=${chat} target="_blank"> Media sent by ${sender}</a>
+          </div>
+        </div>`
+    }
+    chatSection.appendChild(div);
+  }
+  else{
     let div = document.createElement('div');
     if(sender === "user"){
         div.className = "chat-user"
@@ -374,6 +447,7 @@ function createChat(sender,chat,time,chatSection ){
         </div>`
     }
     chatSection.appendChild(div);
+  }
 }
 
 console.log(parseJwt(token))

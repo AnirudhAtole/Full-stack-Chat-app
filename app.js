@@ -50,6 +50,7 @@ const Chat = require('./models/chats');
 const Group = require('./models/group');
 const Admin = require('./models/admin');
 const inviterequest = require('./models/inviterequest');
+const mediafile = require('./models/mediafiles');
 
 
 User.hasMany(Chat);
@@ -69,6 +70,9 @@ Admin.belongsTo(User);
 
 Admin.belongsToMany(Group , {through : 'admingroup'});
 Group.belongsToMany(Admin , {through : 'admingroup'});
+
+User.hasMany(mediafile);
+mediafile.belongsTo(User);
 
 
 app.use(userRoutes);
