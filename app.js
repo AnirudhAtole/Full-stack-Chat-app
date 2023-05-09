@@ -55,6 +55,10 @@ const inviterequest = require('./models/inviterequest');
 const mediafile = require('./models/mediafiles');
 const Archeivedchats = require('./models/chatsarcheived');
 
+const chatController = require('./controllers/chat');
+
+cron.CronJob('0 0 * * *',chatController.archeivingChats);
+
 
 User.hasMany(Chat);
 Chat.belongsTo(User);
