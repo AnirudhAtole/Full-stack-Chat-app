@@ -3,7 +3,8 @@ const sequelize = require('../utils/database');
 const s3services = require('../services/s3service')
 const crypto = require('crypto');
 const Mediafiles = require('../models/mediafiles');
-
+const Chat = require('../models/chats');
+const Archeivedchats = require('../models/chatsarcheived');
 
 exports.addChat = async(req,res)=>{
     try{
@@ -91,3 +92,15 @@ exports.sendFile = async(req,res)=>{
 
 }
 
+
+exports.archeivingChats = async(req,res) =>{
+    const yesterdaysChats = await sequelize.query("SELECT chatmessages , userId FROM chatapp.chats WHERE DATE(createdAt) = DATE(NOW() - INTERVAL 1 DAY);", {type: QueryTypes.SELECT});
+    const yesterdaysChatsId = await sequelize.query("SELECT id FROM chatapp.chats WHERE DATE(createdAt) = DATE(NOW() - INTERVAL 1 DAY);", {type: QueryTypes.SELECT});
+
+    await Archeivedchats.bulkCreate(yesterdaysChats);
+    await Chat.destroy({
+        where:{
+            id : [yesterdaysChatsId]
+        }
+    })
+}

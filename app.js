@@ -10,6 +10,8 @@ const app = express()
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
+const cron = require('cron');
+
 io.on("connection",socket=>{
     socket.on("send-message",(data , group)=>{
         socket.to(group).emit("receive-message",data)
@@ -51,6 +53,7 @@ const Group = require('./models/group');
 const Admin = require('./models/admin');
 const inviterequest = require('./models/inviterequest');
 const mediafile = require('./models/mediafiles');
+const Archeivedchats = require('./models/chatsarcheived');
 
 
 User.hasMany(Chat);
@@ -73,6 +76,10 @@ Group.belongsToMany(Admin , {through : 'admingroup'});
 
 User.hasMany(mediafile);
 mediafile.belongsTo(User);
+
+User.hasMany(Archeivedchats);
+Archeivedchats.belongsTo(User);
+
 
 
 app.use(userRoutes);
