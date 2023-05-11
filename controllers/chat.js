@@ -1,8 +1,10 @@
 const { QueryTypes, Op } = require('sequelize');
-const Chat = require('../models/chats');
 const sequelize = require('../utils/database');
-const Group = require('../models/group');
-
+const s3services = require('../services/s3service')
+const crypto = require('crypto');
+const Mediafiles = require('../models/mediafiles');
+const Chat = require('../models/chats');
+const Archeivedchats = require('../models/chatsarcheived');
 
 exports.addChat = async(req,res)=>{
     try{
@@ -66,3 +68,39 @@ exports.getUpdatedChats = async(req,res) =>{
     }
 }
 
+exports.sendFile = async(req,res)=>{
+    console.log(req)
+    const groupId = req.body.groupId;
+    const imageName = crypto.randomBytes(16).toString('hex');
+    const imageNameWithextension = imageName + req.file.originalname;
+    const fileurl = await s3services.uploadToS3(req.file.buffer,imageNameWithextension);
+
+    Mediafiles.create({
+        userId : req.user.id,
+        groupId : groupId,
+        url : fileurl,
+        filename : req.file.originalname,
+    })
+
+    await req.user.createChat({
+        chatmessages : fileurl,
+        groupId : groupId
+    })
+    res.status(201).json({success:true , message : "Media file successfully submitted" , url:fileurl});
+
+
+
+}
+
+
+exports.archeivingChats = async(req,res) =>{
+    const yesterdaysChats = await sequelize.query("SELECT chatmessages , userId FROM chatapp.chats WHERE DATE(createdAt) = DATE(NOW() - INTERVAL 1 DAY);", {type: QueryTypes.SELECT});
+    const yesterdaysChatsId = await sequelize.query("SELECT id FROM chatapp.chats WHERE DATE(createdAt) = DATE(NOW() - INTERVAL 1 DAY);", {type: QueryTypes.SELECT});
+
+    await Archeivedchats.bulkCreate(yesterdaysChats);
+    await Chat.destroy({
+        where:{
+            id : [yesterdaysChatsId]
+        }
+    })
+}

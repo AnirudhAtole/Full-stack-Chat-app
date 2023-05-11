@@ -52,8 +52,8 @@ exports.addUser = async(req,res) =>{
     
 }
 
-function generateToken(id){
-    return jwt.sign({id:id} , process.env.TOKEN_SECRET);
+function generateToken(id,name){
+    return jwt.sign({id:id , name : name} , process.env.TOKEN_SECRET);
 }
 
 exports.validateUser = async(req,res) =>{
@@ -68,7 +68,7 @@ exports.validateUser = async(req,res) =>{
         if(user){
             Bcrypt.compare(req.body.password , user.password , (err,result)=>{
                 if(result){
-                    res.status(200).json({success : true , message : "User signed in... Welcome young jedi" , token : generateToken(user.id)});
+                    res.status(200).json({success : true , message : "User signed in... Welcome young jedi" , token : generateToken(user.id,user.name)});
                 }
                 else{
                     res.status(200).json({success:false , message : "Your password is incorrect may be you should take a look first"});

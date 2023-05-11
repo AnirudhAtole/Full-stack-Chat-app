@@ -3,11 +3,22 @@ const token = localStorage.getItem('token');
 const ChatWindow = document.getElementById('chat-Window');
 const chatSendBox = document.getElementById('chatSendBox');
 const groupTitle = document.getElementById('group-title');
+let adminArray = []
 
 
 var lastId = 0;
 var chatQueue;
 var selected;
+
+var socket = io();
+
+
+socket.on("receive-message", data =>{
+  console.log(data);
+  distributeChat(data);
+})
+
+
 
 document.getElementById('closeModal').click = ()=>{
   document.getElementById('userList').innerHTML = '';
@@ -21,8 +32,26 @@ document.getElementById('groupList').addEventListener("click",function(e){
       current[0].classList.remove("active");
     }
     e.target.classList.add('active');
-    console.log(e.target.children.children)
+    // socket.emit("leave-group",selected);
     selected = e.target.children[0].innerText;
+    let check = false;
+    for(let admin  of adminArray){
+      if(selected == admin){
+        check = true;
+        break
+      }
+    }
+    console.log(check)
+    if(check){
+      console.log("IM in")
+      document.getElementById("invite-email-container").removeAttribute("hidden")
+    }
+    else{
+      console.log("IM NOT")
+      document.getElementById("invite-email-container").setAttribute('hidden',"hidden")
+    }
+    abletotext(selected);
+    // socket.emit('join-group',selected);
   }
   let cards = document.getElementsByClassName('card')
   for(element of cards){
@@ -35,13 +64,43 @@ document.getElementById('groupList').addEventListener("click",function(e){
 }
 })
 
+function abletotext(selected){
+  if(selected){
+    document.getElementById('send-file-container').removeAttribute('hidden');
+    textbox.removeAttribute('disabled')}
+  else{
 
+  }
+}
+
+document.getElementById("invite-email-btn").addEventListener('click',inviteMember);
+async function inviteMember(e){
+  e.preventDefault();
+  const email = document.getElementById("invite-email").value;
+  const result = await axios.post("http://localhost:3000/user/send-invite",{email:email , groupId:selected},{headers :{"Authorization":token}});
+  if(result.data.success){
+    email = "";
+    alert(result.data.message);
+  }
+
+}
 
 
 textbox.addEventListener("keydown", async function(e){  
     if(e.key === "Enter"){
         if(textbox.value !== ''){
           const chat = textbox.value;
+          const {name , id} = parseJwt(token)
+          const data = {
+            name : name,
+            userId : id,
+            groupId : selected,
+            chatmessages : chat,
+            createdAt : new Date()
+          }
+          const chatCard = document.getElementById(`chat${selected}`);
+          createChat("user",chat,new Date(),chatCard) 
+          socket.emit("send-message" ,data,selected)
           sendChat(chat);
           textbox.value = '';
         }
@@ -86,31 +145,73 @@ groupList.appendChild(li);
 document.getElementById('userList').innerHTML = '';
 }
 
+const isValidUrl = urlString =>{
+      var inputElement = document.createElement('input');
+      inputElement.type = 'url';
+      inputElement.value = urlString;
+
+      if (!inputElement.checkValidity()) {
+        return false;
+      } else {
+        return true;
+      }
+    } 
+
+
 async function getGroupMembers(){
   const result = await axios.get(`http://localhost:3000/group/get-members`,{headers :{"Authorization":token}});
   return result.data;
 }
 
 
+async function uploadFile(){
+  const selectedFile = document.getElementById("send-files-input").files[0];
+  console.log(selectedFile)
+  const formdata = new FormData();
+  formdata.append('file',selectedFile);
+  formdata.append('groupId',selected);
+  console.log(parseJwt(token))
+  const result = await axios.post("http://localhost:3000/chats/send-file",formdata,{headers :{"Authorization":token}})
+  console.log(result)
+  const chat = textbox.value;
+          const {name , id} = parseJwt(token)
+          const data = {
+            name : name,
+            userId : id,
+            groupId : selected,
+            chatmessages : result.data.url,
+            createdAt : new Date()
+          }
+          const chatCard = document.getElementById(`chat${selected}`);
+          createChat("user",chat,new Date(),chatCard) 
+          socket.emit("send-message" ,data,selected)
+          sendChat(chat);
+    document.getElementById("send-files-input").value = null;
+}
 
+const sendFileButton = document.getElementById("send-files-button");
+sendFileButton.addEventListener('click',uploadFile)
 
 async function getAllGroups(){
   try{
     const result = await axios.get("http://localhost:3000/user/get-group",{headers :{"Authorization":token}});
     if(result.data){
       const groupArray = result.data;
+      const groupids = []
     groupArray.forEach(group => {
       const {groupName , id , createdAt} = group;
       const timeCreated = utcTodate(createdAt);
       createGroupFrontEnd(groupName,id,timeCreated);
+      groupids.push(id.toString());
       createCard(id);
     });
+    socket.emit("join-groups",groupids);
     const memberandAdminInfo = await axios.get(`http://localhost:3000/group/get-members`,{headers :{"Authorization":token}});
     const {members , adminNames} = await memberandAdminInfo.data;
     const isAdmin = createAdminInfo(adminNames);
     createMembers(members,isAdmin);
-
     }
+
 
   }
   catch(err){
@@ -148,7 +249,8 @@ function createAdminInfo(adminInfo){
     li.className = "list-inline-item bg-warning rounded-3";
     li.appendChild(document.createTextNode(adminInfo[i].adminName));
     if(adminInfo[i].userId === id){
-      isAdmin.push(groupId);
+      isAdmin.push(groupId.toString);
+      adminArray.push(groupId);
     }
     console.log(li);
     adminUl.appendChild(li);
@@ -160,12 +262,13 @@ async function createMembers(memberInfo,isAdmin){
   for(let i=0;i < memberInfo.length ; i++){
     const userId = memberInfo[i].id;
     const groupId = memberInfo[i].usergroup.groupId;
+    const {id} = parseJwt(token);
     let ul = document.getElementById(`membersGroup${groupId}`)
     let li = document.createElement('li');
     li.className = "list-inline-item bg-info rounded-2";
     li.appendChild(document.createTextNode(memberInfo[i].name));
 
-    if(isAdmin.includes(groupId)){
+    if(isAdmin.includes(groupId) && userId !== id ){
       let removeButton = document.createElement('button');
       removeButton.className = "btn-danger";
       removeButton.appendChild(document.createTextNode("X"));
@@ -277,6 +380,41 @@ function distributeChat(chat){
 
 
 function createChat(sender,chat,time,chatSection ){
+  if(isValidUrl(chat)){
+    let div = document.createElement('div');
+    if(sender === "user"){
+        div.className = "chat-user"
+        div.innerHTML = `
+        <div class="d-flex justify-content-between">
+          <p class="small mb-1 text-muted">${time}</p>
+          <p class="small mb-1">You</p>
+        </div>
+        <div class="d-flex flex-row justify-content-end mb-4">
+          <div class="p-3 me-3 border" style="border-radius: 15px; background-color: #50C878;">
+          <a href=${chat} => Media sent by you</a>
+          </div>
+          <img src="https://img.icons8.com/clouds/1x/mando.png"
+            alt="avatar 1" style="width: 45px; height: 100%;">
+        </div>`
+    }
+    else{
+        div.className = "chat-other"
+        div.innerHTML = `
+        <div class="d-flex justify-content-between">
+          <p class="small mb-1 text-muted">${sender}</p>
+          <p class="small mb-1">${time}</p>
+        </div>
+        <div class="d-flex flex-row justify-content-start mb-4">
+          <img src="https://img.icons8.com/emoji/1x/man-beard.png"
+            alt="avatar 1" style="width: 45px; height: 100%;">
+          <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(57, 192, 237,.2);">
+          <a href=${chat} target="_blank"> Media sent by ${sender}</a>
+          </div>
+        </div>`
+    }
+    chatSection.appendChild(div);
+  }
+  else{
     let div = document.createElement('div');
     if(sender === "user"){
         div.className = "chat-user"
@@ -309,6 +447,7 @@ function createChat(sender,chat,time,chatSection ){
         </div>`
     }
     chatSection.appendChild(div);
+  }
 }
 
 console.log(parseJwt(token))
@@ -323,37 +462,38 @@ async function sendChat(chat){
   }
 }
 
-setInterval(async () => {
-    if(selected){
-    textbox.removeAttribute('disabled');
-    const response = await axios.get(`http://localhost:3000/chats/updated-chats?updation=${lastId}`, {headers:{"Authorization":token}});
-    const {result} = response.data;
-    if(result.length){
-      lastId = result[result.length-1].id;
-      result.forEach(element => {
-        distributeChat(element);
-          if(!chatQueue.enqueue(element)){
-            chatQueue.dequeue();
-            chatQueue.enqueue(element);
-          }
-          else{
-            chatQueue.enqueue();
-          }
-          localStorage.setItem('chats',JSON.stringify(chatQueue.savequeue()));
-      })
-    }
-    }
-    else{
+// setInterval(async () => {
+//   if(selected){
+//   textbox.removeAttribute('disabled');
+//   const response = await axios.get(`http://localhost:3000/chats/updated-chats?updation=${lastId}`, {headers:{"Authorization":token}});
+//   const {result} = response.data;
+//   if(result.length){
+//     lastId = result[result.length-1].id;
+//     result.forEach(element => {
+//       distributeChat(element);
+//         if(!chatQueue.enqueue(element)){
+//           chatQueue.dequeue();
+//           chatQueue.enqueue(element);
+//         }
+//         else{
+//           chatQueue.enqueue();
+//         }
+//         localStorage.setItem('chats',JSON.stringify(chatQueue.savequeue()));
+//     })
+//   }
+//   }
+//   else{
 
 
-    }
-  }, 1000);
+//   }
+// }, 1000);
 
 
 
 window.addEventListener("DOMContentLoaded",async ()=>{
   await getAllGroups();
   let result = localStorage.getItem('recentChats')
+  result = JSON.parse(result);
   console.log(result);
   if(result){
     result = JSON.parse(result);
@@ -391,7 +531,6 @@ window.addEventListener("DOMContentLoaded",async ()=>{
 
 
 async function getandShowChats(token){
-  const {id} = parseJwt(token);
   const response = await axios.get('http://localhost:3000/chat/get-chats',{headers :{"Authorization":token}});
   const {result} = response.data;
   console.log(result.length)
